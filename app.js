@@ -75,55 +75,67 @@ const ICONS = {
 };
 
 // CATEGORIAS DA HOME
+// "id" é o código oficial da categoria no Mercado Livre: é com ele que o back
+// busca os mais vendidos daquela categoria (GET /api/categorias/{id}/mais-vendidos).
 const CATEGORIES = [
 
   {
     name: "Games",
+    id: "MLB1144",
     icon: '<img src="icones/game.png" alt="">'
   },
 
   {
     name: "Eletrodomésticos",
+    id: "MLB5726",
     icon: '<img src="icones/eletrodomestico.png" alt="">'
   },
 
   {
     name: "Ferramentas",
+    id: "MLB263532",
     icon: '<img src="icones/caixa-de-ferramentas.png" alt="">'
   },
 
   {
     name: "Beleza e Cuidado Pessoal",
+    id: "MLB1246",
     icon: '<img src="icones/perfume.png" alt="">'
   },
 
   {
     name: "Celulares e Telefones",
+    id: "MLB1051",
     icon: '<img src="icones/smartphone.png" alt="">'
   },
 
   {
     name: "Informática",
+    id: "MLB1648",
     icon: '<img src="icones/informatica.png" alt="">'
   },
 
   {
     name: "Eletrônicos, Áudio e Vídeo",
+    id: "MLB1000",
     icon: '<img src="icones/eletronicos.png" alt="">'
   },
 
   {
     name: "Esportes e Fitness",
+    id: "MLB1276",
     icon: '<img src="icones/esporte.png" alt="">'
   },
 
   {
     name: "Calçados, Roupas e Bolsas",
+    id: "MLB1430",
     icon: '<img src="icones/roupa.png" alt="">'
   },
 
   {
     name: "Acessórios para Veículos",
+    id: "MLB5672",
     icon: '<img src="icones/veiculo.png" alt="">'
   }
 
@@ -134,6 +146,16 @@ const CATEGORIES = [
 // o back nesse endereço. Se o endereço do back mudar, só ajustar aqui.
 const API_BASE = "http://localhost:5102";
 
+// Os títulos reais do Mercado Livre têm aspas e símbolos (ex.: Tela 15,6" FHD).
+// Sem escapar, eles quebram o HTML do card (o alt="..." fecha no meio do título).
+function escapeHtml(valor) {
+  return String(valor ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 // Traduz o produto do formato do back (pt/snake_case) pro formato que o card espera.
 function mapProduto(r) {
 
@@ -149,14 +171,19 @@ function mapProduto(r) {
   };
 }
 
-async function fetchProducts(query = "") {
+async function fetchProducts(query = "", categoriaId = "") {
 
   const termo = (query || "").trim();
 
-  // Sem termo -> destaques (mais vendidos). Com termo -> busca.
-  const url = termo
-    ? `${API_BASE}/api/buscar?termo=${encodeURIComponent(termo)}`
-    : `${API_BASE}/api/produtos/destaques?quantidade=20`;
+  // Com id de categoria -> mais vendidos daquela categoria.
+  // Com termo -> busca por texto. Sem nada -> destaques (mais vendidos em geral).
+  let url = `${API_BASE}/api/produtos/destaques?quantidade=20`;
+
+  if (categoriaId) {
+    url = `${API_BASE}/api/categorias/${encodeURIComponent(categoriaId)}/mais-vendidos`;
+  } else if (termo) {
+    url = `${API_BASE}/api/buscar?termo=${encodeURIComponent(termo)}`;
+  }
 
   try {
 
@@ -398,6 +425,16 @@ function productCardHTML(p) {
 
       : "";
 
+// SELO DE MAIS VENDIDO
+  const bestSellerHTML =
+    p.bestSeller
+      ? `
+        <span class="best-seller-tag">
+          Mais vendido
+        </span>
+      `
+      : "";
+
 // PRODUTO PATROCINADO
   const adTagHTML =
     p.sponsored
@@ -416,7 +453,7 @@ function productCardHTML(p) {
       ? `
         <p class="product-brand">
 
-          ${p.brand}
+          ${escapeHtml(p.brand)}
 
           ${
             p.verifiedBrand
@@ -434,7 +471,7 @@ function productCardHTML(p) {
 
     <a
       class="product-cta"
-      href="${p.productUrl || "#"}"
+      href="${escapeHtml(p.productUrl || "#")}"
       target="_blank"
       rel="noopener noreferrer"
     >
@@ -448,15 +485,15 @@ function productCardHTML(p) {
 
     <article
       class="product-card"
-      data-id="${p.id}"
+      data-id="${escapeHtml(p.id)}"
     >
 
       <div class="product-media">
 
         <img
           class="product-image"
-          src="${p.image}"
-          alt="${p.title}"
+          src="${escapeHtml(p.image)}"
+          alt="${escapeHtml(p.title)}"
           loading="lazy"
         >
 
@@ -469,6 +506,8 @@ function productCardHTML(p) {
 
         </button>
 
+        ${bestSellerHTML}
+
         ${colorDotsHTML}
 
         ${adTagHTML}
@@ -478,7 +517,7 @@ function productCardHTML(p) {
       <div class="product-body">
 
         <h3 class="product-title">
-          ${p.title}
+          ${escapeHtml(p.title)}
         </h3>
 
         ${brandHTML}
@@ -567,6 +606,7 @@ function renderCategories() {
           <button
             class="category-pill"
             data-category="${cat.name}"
+            data-category-id="${cat.id}"
             type="button"
           >
 
@@ -653,6 +693,10 @@ if (categoriesRow) {
         `busca.html?categoria=${
           encodeURIComponent(
             pill.dataset.category
+          )
+        }&categoriaId=${
+          encodeURIComponent(
+            pill.dataset.categoryId
           )
         }`;
     }
@@ -789,6 +833,12 @@ if (searchGrid) {
   const categoria =
     params.get("categoria") || "";
 
+  // Se a pessoa digitou uma busca, ela vale mais que a categoria da URL.
+  const categoriaId =
+    query
+      ? ""
+      : (params.get("categoriaId") || "");
+
   const termo =
     query || categoria;
 
@@ -808,13 +858,40 @@ if (searchGrid) {
       : "Resultados";
 
 // BUSCA OS PRODUTOS
-  fetchProducts(termo)
+// Categoria com id -> mais vendidos dela. Se vier vazio (categoria sem ranking
+// no Mercado Livre), cai na busca por texto usando o nome da categoria.
+  let veioDoRanking =
+    !!categoriaId;
+
+  const buscar =
+    categoriaId
+      ? fetchProducts("", categoriaId)
+          .then(
+            produtos => {
+              if (produtos.length > 0) {
+                return produtos;
+              }
+              veioDoRanking = false;
+              return fetchProducts(termo);
+            }
+          )
+      : fetchProducts(termo);
+
+  buscar
 
     .then(
       produtos => {
 
         resultCountEl.textContent =
-          termo
+          veioDoRanking
+
+            ? `${produtos.length} mais vendido${
+                produtos.length !== 1
+                  ? "s"
+                  : ""
+              } em "${categoria}"`
+
+          : termo
 
             ? `${produtos.length} resultado${
                 produtos.length !== 1

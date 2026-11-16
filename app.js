@@ -58,6 +58,22 @@ const ICONS = {
     </svg>
   `,
 
+  heart: `
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+    >
+
+      <path d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 5.5
+        5.5 5.5 0 0121.5 12c-2.5 4.5-9.5 9-9.5 9z"/>
+
+    </svg>
+  `,
+
   chevronRight: `
     <svg
       viewBox="0 0 24 24"
@@ -156,6 +172,137 @@ function escapeHtml(valor) {
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
 }
+// ARMAZENAMENTO LOCAL
+// Favoritos, histórico de buscas e nome do perfil ficam só neste navegador (localStorage).
+const STORAGE_KEYS = {
+  favoritos: "buscaml:favoritos",
+  historico: "buscaml:historico",
+  perfil: "buscaml:perfil"
+};
+
+const LIMITE_HISTORICO = 10;
+
+// Produtos já desenhados na tela, por id. É daqui que o botão de favoritar
+// tira o produto completo pra guardar.
+const produtosPorId = new Map();
+
+function lerStorage(chave, padrao) {
+  try {
+    const bruto = localStorage.getItem(chave);
+    return bruto ? JSON.parse(bruto) : padrao;
+  } catch (err) {
+    return padrao;
+  }
+}
+
+function gravarStorage(chave, valor) {
+  try {
+    localStorage.setItem(chave, JSON.stringify(valor));
+    return true;
+  } catch (err) {
+    console.warn("Não foi possível salvar neste navegador:", err);
+    return false;
+  }
+}
+
+function removerStorage(chave) {
+  try {
+    localStorage.removeItem(chave);
+  } catch (err) {
+    console.warn("Não foi possível apagar dados deste navegador:", err);
+  }
+}
+
+// FAVORITOS
+function listarFavoritos() {
+  const lista = lerStorage(STORAGE_KEYS.favoritos, []);
+  return Array.isArray(lista) ? lista : [];
+}
+
+function isFavorito(id) {
+  return listarFavoritos().some(p => p.id === id);
+}
+
+// Favorita ou desfavorita. Devolve true (virou favorito), false (saiu dos favoritos)
+// ou null quando o produto não está na tela e por isso não dá pra guardar.
+function alternarFavorito(id) {
+  const favoritos = listarFavoritos();
+  const indice = favoritos.findIndex(p => p.id === id);
+
+  if (indice >= 0) {
+    favoritos.splice(indice, 1);
+    gravarStorage(STORAGE_KEYS.favoritos, favoritos);
+    atualizarContadorFavoritos();
+    return false;
+  }
+
+  const produto = produtosPorId.get(id);
+  if (!produto) {
+    return null;
+  }
+
+  favoritos.unshift(produto);
+  gravarStorage(STORAGE_KEYS.favoritos, favoritos);
+  atualizarContadorFavoritos();
+  return true;
+}
+
+function atualizarContadorFavoritos() {
+  const total = listarFavoritos().length;
+
+  document.querySelectorAll("[data-fav-count]").forEach(el => {
+    el.textContent = total > 99 ? "99+" : String(total);
+    el.hidden = total === 0;
+  });
+}
+
+// Botão de coração do card
+function favButtonHTML(p) {
+  const ativo = isFavorito(p.id);
+
+  return `
+    <button
+      class="fav-btn${ativo ? " is-active" : ""}"
+      type="button"
+      data-fav-id="${escapeHtml(p.id)}"
+      aria-pressed="${ativo}"
+      aria-label="${ativo ? "Remover dos favoritos" : "Adicionar aos favoritos"}"
+    >
+      ${ICONS.heart}
+    </button>
+  `;
+}
+
+// HISTÓRICO DE BUSCAS
+function listarHistorico() {
+  const lista = lerStorage(STORAGE_KEYS.historico, []);
+  return Array.isArray(lista) ? lista : [];
+}
+
+function registrarBusca(termo) {
+  const texto = (termo || "").trim();
+
+  if (!texto) {
+    return;
+  }
+
+  const historico = listarHistorico()
+    .filter(t => t.toLowerCase() !== texto.toLowerCase());
+
+  historico.unshift(texto);
+  gravarStorage(STORAGE_KEYS.historico, historico.slice(0, LIMITE_HISTORICO));
+}
+
+// PERFIL
+function lerNomePerfil() {
+  const perfil = lerStorage(STORAGE_KEYS.perfil, {});
+  return (perfil && typeof perfil.nome === "string") ? perfil.nome : "";
+}
+
+function gravarNomePerfil(nome) {
+  gravarStorage(STORAGE_KEYS.perfil, { nome: nome.trim() });
+}
+
 // Traduz o produto do formato do back (pt/snake_case) pro formato que o card espera.
 function mapProduto(r) {
 
@@ -508,6 +655,8 @@ function productCardHTML(p) {
 
         ${bestSellerHTML}
 
+        ${favButtonHTML(p)}
+
         ${colorDotsHTML}
 
         ${adTagHTML}
@@ -578,6 +727,8 @@ function renderProducts(
 
     return;
   }
+
+  products.forEach(p => produtosPorId.set(p.id, p));
 
   containerEl.innerHTML =
     products
@@ -911,4 +1062,255 @@ if (searchGrid) {
         );
       }
     );
+}
+
+
+// ---------------------------------------------------------------------------
+// NAVEGAÇÃO, FAVORITOS, CATEGORIAS E PERFIL
+// ---------------------------------------------------------------------------
+
+// Página de cada item do menu (barra inferior no celular, ícones no cabeçalho).
+const ROTAS = {
+  inicio: "home.html",
+  categorias: "categorias.html",
+  favoritos: "favoritos.html",
+  perfil: "perfil.html"
+};
+
+// Qual item do menu fica destacado em cada página.
+const MENU_DA_PAGINA = {
+  "home.html": "inicio",
+  "categorias.html": "categorias",
+  "favoritos.html": "favoritos",
+  "perfil.html": "perfil"
+};
+
+function configurarNavegacao() {
+
+  document.querySelectorAll(".nav-item[data-nav]").forEach(item => {
+    item.addEventListener("click", () => {
+      window.location.href = ROTAS[item.dataset.nav] || ROTAS.inicio;
+    });
+  });
+
+  const favoritesBtn = document.getElementById("favoritesBtn");
+  if (favoritesBtn) {
+    favoritesBtn.addEventListener("click", () => {
+      window.location.href = ROTAS.favoritos;
+    });
+  }
+
+  const profileBtn = document.getElementById("profileBtn");
+  if (profileBtn) {
+    profileBtn.addEventListener("click", () => {
+      window.location.href = ROTAS.perfil;
+    });
+  }
+
+  const arquivo = window.location.pathname.split("/").pop() || "home.html";
+  const ativo = MENU_DA_PAGINA[arquivo];
+
+  document.querySelectorAll(".nav-item").forEach(item => {
+    item.classList.toggle("active", item.dataset.nav === ativo);
+  });
+}
+
+configurarNavegacao();
+atualizarContadorFavoritos();
+
+// Guarda no histórico tudo que a pessoa busca pelas barras de pesquisa.
+document.querySelectorAll('form[role="search"]').forEach(form => {
+  form.addEventListener("submit", () => {
+    const campo = form.querySelector('input[name="q"]');
+    registrarBusca(campo ? campo.value : "");
+  });
+});
+
+// Clique no coração de qualquer card (os cards são criados depois, por isso delegação).
+document.addEventListener("click", (e) => {
+
+  const botao = e.target.closest(".fav-btn");
+
+  if (!botao) {
+    return;
+  }
+
+  e.preventDefault();
+
+  const agoraFavorito = alternarFavorito(botao.dataset.favId);
+
+  if (agoraFavorito === null) {
+    return;
+  }
+
+  botao.classList.toggle("is-active", agoraFavorito);
+  botao.setAttribute("aria-pressed", String(agoraFavorito));
+  botao.setAttribute(
+    "aria-label",
+    agoraFavorito ? "Remover dos favoritos" : "Adicionar aos favoritos"
+  );
+
+  // Na página de favoritos, desfavoritar tira o card da lista.
+  if (!agoraFavorito && document.getElementById("favoritesGrid")) {
+    renderFavoritos();
+  }
+});
+
+// PÁGINA DE CATEGORIAS
+const categoriesGrid = document.getElementById("categoriesGrid");
+
+if (categoriesGrid) {
+
+  categoriesGrid.innerHTML =
+    CATEGORIES
+      .map(
+        cat => `
+
+          <a
+            class="category-tile"
+            href="busca.html?categoria=${encodeURIComponent(cat.name)}&categoriaId=${encodeURIComponent(cat.id)}"
+          >
+
+            ${cat.icon}
+
+            <span>
+              ${cat.name}
+            </span>
+
+          </a>
+
+        `
+      )
+      .join("");
+}
+
+// PÁGINA DE FAVORITOS
+function renderFavoritos() {
+
+  const grid = document.getElementById("favoritesGrid");
+  const contagem = document.getElementById("favoritesCount");
+
+  if (!grid || !contagem) {
+    return;
+  }
+
+  const favoritos = listarFavoritos();
+
+  if (favoritos.length === 0) {
+
+    contagem.textContent = "";
+
+    grid.innerHTML = `
+
+      <div class="empty-state">
+        <strong>Você ainda não favoritou nada</strong>
+        Toque no coração de um produto pra guardá-lo aqui.
+        <br>
+        <a href="home.html">Ver os mais vendidos</a>
+      </div>
+
+    `;
+
+    return;
+  }
+
+  contagem.textContent =
+    `${favoritos.length} produto${favoritos.length !== 1 ? "s" : ""} favoritado${favoritos.length !== 1 ? "s" : ""}. ` +
+    "Os preços podem ter mudado desde que você favoritou.";
+
+  renderProducts(favoritos, grid);
+}
+
+if (document.getElementById("favoritesGrid")) {
+  renderFavoritos();
+}
+
+// PÁGINA DE PERFIL
+const profileName = document.getElementById("profileName");
+
+function renderPerfil() {
+
+  const nome = lerNomePerfil();
+
+  const avatar = document.getElementById("profileAvatar");
+  if (avatar) {
+    avatar.textContent = nome ? nome.charAt(0).toUpperCase() : "?";
+  }
+
+  const titulo = document.getElementById("profileTitle");
+  if (titulo) {
+    titulo.textContent = nome ? `Olá, ${nome}` : "Perfil";
+  }
+
+  const historico = listarHistorico();
+
+  const statFavoritos = document.getElementById("statFavoritos");
+  if (statFavoritos) {
+    statFavoritos.textContent = String(listarFavoritos().length);
+  }
+
+  const statBuscas = document.getElementById("statBuscas");
+  if (statBuscas) {
+    statBuscas.textContent = String(historico.length);
+  }
+
+  const lista = document.getElementById("historyList");
+  if (lista) {
+    lista.innerHTML =
+      historico.length === 0
+        ? '<p class="profile-note">Suas buscas recentes aparecem aqui.</p>'
+        : historico
+            .map(
+              termo => `
+                <a class="chip" href="busca.html?q=${encodeURIComponent(termo)}">
+                  ${escapeHtml(termo)}
+                </a>
+              `
+            )
+            .join("");
+  }
+}
+
+if (profileName) {
+
+  profileName.value = lerNomePerfil();
+  renderPerfil();
+
+  let avisoTimer = null;
+
+  profileName.addEventListener("input", () => {
+
+    gravarNomePerfil(profileName.value);
+    renderPerfil();
+
+    const aviso = document.getElementById("profileSaved");
+    if (aviso) {
+      aviso.hidden = false;
+      clearTimeout(avisoTimer);
+      avisoTimer = setTimeout(() => { aviso.hidden = true; }, 1500);
+    }
+  });
+
+  const limparHistorico = document.getElementById("clearHistory");
+  if (limparHistorico) {
+    limparHistorico.addEventListener("click", () => {
+      removerStorage(STORAGE_KEYS.historico);
+      renderPerfil();
+    });
+  }
+
+  const limparTudo = document.getElementById("clearAll");
+  if (limparTudo) {
+    limparTudo.addEventListener("click", () => {
+
+      if (!window.confirm("Apagar seus favoritos, seu histórico e seu nome deste navegador?")) {
+        return;
+      }
+
+      Object.values(STORAGE_KEYS).forEach(removerStorage);
+      profileName.value = "";
+      renderPerfil();
+      atualizarContadorFavoritos();
+    });
+  }
 }

@@ -931,3 +931,330 @@ input{
     padding:7px 12px;
   }
 }
+
+
+/* ==========================================================================
+   FAVORITOS, CATEGORIAS E PERFIL
+   ========================================================================== */
+
+/* CONTADOR (BOLINHA VERMELHA) NO CORAÇÃO */
+.icon-btn,
+.nav-item{
+  position: relative;
+}
+
+.icon-badge{
+
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #e63946;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 700;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.icon-badge[hidden]{
+  display: none;
+}
+
+.nav-item .icon-badge{
+  top: -6px;
+  right: auto;
+  left: calc(50% + 2px);
+}
+
+/* CORAÇÃO NO CARD DO PRODUTO */
+.fav-btn{
+
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 2;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: rgba(255,255,255,.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  color: var(--blue);
+  transition:
+    transform .15s ease,
+    color .15s ease;
+}
+
+.fav-btn:hover{
+  transform: scale(1.08);
+}
+
+.fav-btn svg{
+
+  width: 18px;
+  height: 18px;
+  fill: none;
+}
+
+.fav-btn.is-active{
+  color: #e63946;
+}
+
+.fav-btn.is-active svg{
+  fill: currentColor;
+}
+
+/* TÍTULO DAS PÁGINAS NOVAS */
+.page-title{
+
+  margin: 0;
+  padding: 18px 2px 0;
+  font-size: clamp(20px, 2.2vw, 26px);
+  font-weight: 800;
+  color: var(--dark);
+}
+
+/* TELA VAZIA (FAVORITOS) */
+.empty-state{
+
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 48px 16px;
+  color: var(--gray-text);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.empty-state strong{
+
+  display: block;
+  margin-bottom: 6px;
+  font-size: 17px;
+  color: var(--dark);
+}
+
+.empty-state a{
+
+  display: inline-block;
+  margin-top: 16px;
+  padding: 10px 18px;
+  border-radius: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+/* PÁGINA DE CATEGORIAS */
+.category-grid{
+
+  display: grid;
+  grid-template-columns:
+    repeat(
+      auto-fill,
+      minmax(150px, 1fr)
+    );
+  gap: 14px;
+  padding: 6px 0 16px;
+}
+
+.category-tile{
+
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--dark);
+  font-size: 13.5px;
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+  transition:
+    border-color .15s ease,
+    box-shadow .15s ease,
+    transform .15s ease;
+}
+
+.category-tile:hover{
+
+  border-color: var(--blue);
+  box-shadow: 0 6px 20px rgba(0,0,0,.09);
+  transform: translateY(-2px);
+}
+
+.category-tile img{
+
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  display: block;
+}
+
+/* PÁGINA DE PERFIL */
+.profile-card{
+
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 18px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.avatar{
+
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+.profile-info{
+
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-info label{
+
+  display: block;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: var(--gray-text);
+}
+
+.profile-info input{
+
+  width: 100%;
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  outline: none;
+  font-size: 15px;
+  color: var(--dark);
+}
+
+.profile-info input:focus{
+  border-color: var(--blue);
+}
+
+.profile-hint{
+
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--green);
+}
+
+.profile-hint[hidden]{
+  display: none;
+}
+
+.profile-stats{
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.stat{
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 16px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+  text-decoration: none;
+  color: var(--dark);
+}
+
+.stat strong{
+  font-size: 26px;
+}
+
+.stat span{
+
+  font-size: 12px;
+  color: var(--gray-text);
+}
+
+.chips{
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.chip{
+
+  padding: 8px 14px;
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  color: var(--dark);
+  text-decoration: none;
+}
+
+.chip:hover{
+  border-color: var(--blue);
+}
+
+.profile-note{
+
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--gray-text);
+}
+
+.danger-btn{
+
+  padding: 10px 16px;
+  background: #fff;
+  border: 1px solid #e3b4ae;
+  border-radius: 8px;
+  color: #c0392b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.danger-btn:hover{
+  background: #fdf3f2;
+}
+
+/* Cabeçalho das páginas internas: no celular os atalhos ficam na barra inferior. */
+@media (max-width: 899px){
+
+  .header-search .header-icons{
+    display: none;
+  }
+}

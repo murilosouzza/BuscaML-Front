@@ -55,7 +55,3 @@ app.js           toda a lógica: cards, chamadas à API, favoritos, histórico e
 styles.css       estilos
 icones/          ícones das categorias
 ```
-
-## Limitações conhecidas
-
-- A seta `›` no canto da imagem do card é só visual: a API devolve uma única imagem por produto.

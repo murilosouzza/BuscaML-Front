@@ -72,21 +72,6 @@ const ICONS = {
         5.5 5.5 0 0121.5 12c-2.5 4.5-9.5 9-9.5 9z"/>
 
     </svg>
-  `,
-
-  chevronRight: `
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      stroke-width="2.4"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-
-      <polyline points="9 6 15 12 9 18"/>
-
-    </svg>
   `
 };
 
@@ -643,15 +628,6 @@ function productCardHTML(p) {
           alt="${escapeHtml(p.title)}"
           loading="lazy"
         >
-
-        <button
-          class="media-next"
-          aria-label="Próxima imagem"
-        >
-
-          ${ICONS.chevronRight}
-
-        </button>
 
         ${bestSellerHTML}
 

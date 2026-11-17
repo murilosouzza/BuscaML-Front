@@ -1,4 +1,4 @@
-# BuscaML — Front-end
+# BuscaML — Front-end...
 
 Site em HTML, CSS e JavaScript puro (sem framework) que mostra os **mais vendidos do Mercado Livre** e permite buscar por texto ou por categoria. Consome a [BuscaML API](https://github.com/murilosouzza/Busca_ML-API).
 

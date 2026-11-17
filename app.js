@@ -759,7 +759,7 @@ function renderCategories() {
   const pilulaAtiva = row.querySelector(".category-pill.is-active");
 
   if (pilulaAtiva) {
-    pilulaAtiva.scrollIntoView({ inline: "center", block: "nearest" });
+    pilulaAtiva.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant" });
   }
 }
 

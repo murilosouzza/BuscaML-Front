@@ -281,7 +281,10 @@ input{
   overflow-y: hidden;
   scroll-behavior: smooth;
   scrollbar-width: none;
-  padding: 6px 4px;
+
+  /* Folga no fim da faixa: quando a barra de rolagem da página aparece, o fim da
+     rolagem perde ~15px e a última categoria ficava cortada. */
+  padding: 6px 28px 6px 4px;
   white-space: nowrap;
 }
 

@@ -759,7 +759,18 @@ function renderCategories() {
   const pilulaAtiva = row.querySelector(".category-pill.is-active");
 
   if (pilulaAtiva) {
-    pilulaAtiva.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant" });
+
+    const centralizar = () => {
+      pilulaAtiva.scrollIntoView({ inline: "center", block: "nearest", behavior: "instant" });
+    };
+
+    centralizar();
+
+    // Fontes e ícones terminam de carregar depois e deixam a faixa um pouco mais larga:
+    // recentraliza quando a página termina de carregar.
+    if (document.readyState !== "complete") {
+      window.addEventListener("load", centralizar);
+    }
   }
 }
 

@@ -725,13 +725,20 @@ function renderCategories() {
     return;
   }
 
+  // Na página de busca por categoria, a pílula da categoria atual fica destacada.
+  const paramsUrl = new URLSearchParams(window.location.search);
+  const categoriaAtivaId =
+    paramsUrl.get("q")
+      ? ""
+      : (paramsUrl.get("categoriaId") || "");
+
   row.innerHTML =
     CATEGORIES
       .map(
         cat => `
 
           <button
-            class="category-pill"
+            class="category-pill${cat.id === categoriaAtivaId ? " is-active" : ""}"
             data-category="${cat.name}"
             data-category-id="${cat.id}"
             type="button"
@@ -748,6 +755,12 @@ function renderCategories() {
         `
       )
       .join("");
+
+  const pilulaAtiva = row.querySelector(".category-pill.is-active");
+
+  if (pilulaAtiva) {
+    pilulaAtiva.scrollIntoView({ inline: "center", block: "nearest" });
+  }
 }
 
 // ELEMENTOS DA HOME

@@ -8,10 +8,9 @@ Este front **não funciona sozinho**: ele precisa da API rodando em `http://loca
 
 1. Suba o back primeiro, seguindo o README dele: https://github.com/murilosouzza/Busca_ML-API
    (precisa de PostgreSQL; sem credenciais do Mercado Livre a API roda com dados de exemplo).
-2. Sirva esta pasta com um servidor estático (não abra os `.html` com duplo clique):
-   - **VS Code**: extensão *Live Server* → botão direito em `home.html` → *Open with Live Server*
-   - **ou**: `npx http-server -p 5500 .`
-3. Abra `home.html` no navegador.
+2. Abra o site de um destes jeitos:
+   - **Mais simples (Chrome ou Edge):** dê dois cliques em `home.html`. Não precisa de servidor.
+   - **Com servidor local:** extensão *Live Server* do VS Code (botão direito em `home.html` → *Open with Live Server*) ou, no terminal, `npx http-server -p 5500 .` e abra `http://127.0.0.1:5500/home.html`.
 
 O endereço da API fica na constante `API_BASE`, no começo de [`app.js`](app.js):
 
@@ -31,6 +30,8 @@ Se a API rodar em outro endereço, é só trocar essa linha.
 | `categorias.html` | As 10 categorias em grade | — |
 | `favoritos.html` | Os produtos que você favoritou | — |
 | `perfil.html` | Nome, contadores, buscas recentes e botão de apagar dados | — |
+
+Na página de busca, a faixa de categorias (com os ícones) fica no topo e funciona como filtro: clicar em outra categoria troca o resultado, e a categoria atual aparece destacada.
 
 No computador, Favoritos e Perfil ficam nos ícones do cabeçalho. No celular, na barra inferior.
 
@@ -55,3 +56,8 @@ app.js           toda a lógica: cards, chamadas à API, favoritos, histórico e
 styles.css       estilos
 icones/          ícones das categorias
 ```
+
+## Problemas comuns
+
+- **`ERR_CONNECTION_REFUSED` ao abrir ou navegar** (por exemplo em `127.0.0.1:5500`): o servidor local do site não está rodando. Abra o `home.html` direto (dois cliques) ou rode de novo `npx http-server -p 5500 .` e deixe o terminal aberto.
+- **"Nenhum produto encontrado":** a API não está rodando em `http://localhost:5102`. Suba o back primeiro.

@@ -1235,3 +1235,16 @@ input{
     display: none;
   }
 }
+
+/* CATEGORIA ATUAL DESTACADA NA FAIXA DE FILTROS */
+.category-pill.is-active{
+
+  border-color: var(--blue);
+  background: #eef0ff;
+}
+
+.category-pill.is-active span{
+
+  color: var(--blue);
+  font-weight: 700;
+}
